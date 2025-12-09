@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { OutputCard } from "@/components/shared/OutputCard";
 import { CopyButton } from "@/components/shared/CopyButton";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 interface LayoutContext {
   openSidebar: () => void;
@@ -21,13 +23,32 @@ export default function GenerateText() {
     if (!prompt.trim()) return;
     
     setIsLoading(true);
-    // Simulated API call - replace with actual API
-    setTimeout(() => {
-      setOutput(
-        `Here's a response to your prompt: "${prompt}"\n\nThis is a simulated text generation output. In a real implementation, this would be connected to an AI text generation API like GPT or Claude. The response would be dynamically generated based on your input prompt.\n\nYou can customize this to generate various types of content including:\n• Creative writing\n• Technical documentation\n• Marketing copy\n• Code explanations\n• And much more!`
-      );
+    setOutput("");
+    
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-text", {
+        body: { prompt },
+      });
+
+      if (error) {
+        throw new Error(error.message || "Failed to generate text");
+      }
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      setOutput(data.text || "No response generated");
+    } catch (error) {
+      console.error("Generation error:", error);
+      toast({
+        title: "Generation failed",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   return (

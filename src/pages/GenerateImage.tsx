@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { OutputCard } from "@/components/shared/OutputCard";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 interface LayoutContext {
@@ -21,28 +22,53 @@ export default function GenerateImage() {
     if (!prompt.trim()) return;
     
     setIsLoading(true);
-    // Simulated API call - replace with actual image generation API
-    setTimeout(() => {
-      // Using a placeholder image service
-      setImageUrl(`https://picsum.photos/seed/${encodeURIComponent(prompt)}/800/600`);
+    setImageUrl("");
+    
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-image", {
+        body: { prompt },
+      });
+
+      if (error) {
+        throw new Error(error.message || "Failed to generate image");
+      }
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      if (data?.imageUrl) {
+        setImageUrl(data.imageUrl);
+        toast({
+          title: "Image generated!",
+          description: "Your AI-generated image is ready.",
+        });
+      } else {
+        throw new Error("No image was generated");
+      }
+    } catch (error) {
+      console.error("Generation error:", error);
+      toast({
+        title: "Generation failed",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-    }, 2000);
+    }
   };
 
   const handleDownload = async () => {
     if (!imageUrl) return;
     
     try {
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `ai-generated-${Date.now()}.jpg`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
+      // For base64 images, create a download link directly
+      const link = document.createElement("a");
+      link.href = imageUrl;
+      link.download = `ai-generated-${Date.now()}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
       
       toast({
         title: "Downloaded!",

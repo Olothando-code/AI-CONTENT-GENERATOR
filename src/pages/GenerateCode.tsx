@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { OutputCard } from "@/components/shared/OutputCard";
 import { CopyButton } from "@/components/shared/CopyButton";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 interface LayoutContext {
@@ -22,39 +23,32 @@ export default function GenerateCode() {
     if (!prompt.trim()) return;
     
     setIsLoading(true);
-    // Simulated API call - replace with actual code generation API
-    setTimeout(() => {
-      setOutput(
-`// Generated code based on: "${prompt}"
+    setOutput("");
+    
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-code", {
+        body: { prompt },
+      });
 
-function generateResponse(input: string): string {
-  // Process the input
-  const processed = input.trim().toLowerCase();
-  
-  // Generate a response
-  const responses = {
-    greeting: "Hello! How can I help you today?",
-    farewell: "Goodbye! Have a great day!",
-    default: "I understand. Let me help you with that."
-  };
-  
-  if (processed.includes("hello") || processed.includes("hi")) {
-    return responses.greeting;
-  }
-  
-  if (processed.includes("bye") || processed.includes("goodbye")) {
-    return responses.farewell;
-  }
-  
-  return responses.default;
-}
+      if (error) {
+        throw new Error(error.message || "Failed to generate code");
+      }
 
-// Example usage
-const result = generateResponse("${prompt}");
-console.log(result);`
-      );
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      setOutput(data.code || "No code generated");
+    } catch (error) {
+      console.error("Generation error:", error);
+      toast({
+        title: "Generation failed",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   const handleShareToGithub = () => {
