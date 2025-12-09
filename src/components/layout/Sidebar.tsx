@@ -35,7 +35,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-sidebar-border">
-            <h1 className="text-xl font-semibold gradient-text">AI Studio</h1>
+            <h1 className="text-xl font-semibold gradient-text">AI Content Generator</h1>
             <button
               onClick={onClose}
               className="p-2 rounded-lg hover:bg-sidebar-accent transition-colors lg:hidden"
