@@ -35,11 +35,11 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-image-preview",
+        model: "google/gemini-3-pro-image-preview",
         messages: [
           { 
             role: "user", 
-            content: `Generate an image: ${prompt}` 
+            content: prompt
           },
         ],
         modalities: ["image", "text"],
@@ -67,14 +67,14 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log("AI response received");
+    console.log("AI response structure:", JSON.stringify(data, null, 2).substring(0, 1000));
 
     // Extract the base64 image from the response
     const imageData = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
     
     if (!imageData) {
-      console.error("No image in response:", JSON.stringify(data).substring(0, 500));
-      throw new Error("No image generated");
+      console.error("No image in response. Full response:", JSON.stringify(data));
+      throw new Error("Image generation failed. The model did not return an image.");
     }
 
     console.log("Image generated successfully");
