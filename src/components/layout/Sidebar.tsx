@@ -1,6 +1,8 @@
-import { X, Type, Image, Code, HelpCircle } from "lucide-react";
+import { X, Type, Image, Code, HelpCircle, Moon, Sun } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useTheme } from "next-themes";
+import { Button } from "@/components/ui/button";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -67,13 +69,31 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           </nav>
 
           {/* Footer */}
-          <div className="p-6 border-t border-sidebar-border">
-            <p className="text-xs text-muted-foreground text-center">
+          <div className="p-6 border-t border-sidebar-border flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
               Powered by AI
             </p>
+            <ThemeToggle />
           </div>
         </div>
       </aside>
     </>
+  );
+}
+
+function ThemeToggle() {
+  const { theme, setTheme } = useTheme();
+  
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-8 w-8"
+      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+    >
+      <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+      <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+      <span className="sr-only">Toggle theme</span>
+    </Button>
   );
 }
